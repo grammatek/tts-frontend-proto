@@ -1,0 +1,190 @@
+syntax = "proto3";
+
+/*
+Request a complete preprocessing pipeline from raw text to phonetic representation
+ */
+message PreprocessRequest {
+  string content = 1;
+  TextCleanerParams params = 2;
+  NormalizationDomain domain = 3;
+  PhonemeDescription description = 4;
+}
+
+message PreprocessedResponse {
+  string processed_content = 1;
+  repeated TranscribedTokenList tokens = 2;
+  PhonemeDescription description = 3;
+}
+
+message TranscribedTokenList {
+  oneof tokens {
+    TranscribedToken transcribed = 1;
+    TagToken tag = 2;
+  }
+}
+
+/*
+Request a normalizer pipeline from raw text to tts-normalized text.
+ */
+message NormalizeRequest {
+  string content = 1;
+  TextCleanerParams params = 2;
+  NormalizationDomain domain = 3;
+  bool do_spellcheck = 4; // default False
+}
+
+message NormalizedResponse {
+  string processed_content = 1;
+  repeated NormalizedTokenList tokens = 2;
+  NormalizationDomain domain = 3;
+  bool is_spellchecked = 4;
+}
+
+message NormalizedTokenList {
+  oneof tokens {
+    NormalizedToken normalized = 1;
+    TagToken tag = 2;
+  }
+}
+
+/*
+Request a normalizer pipeline from raw text to tts-normalized text.
+ */
+message TextCleanRequest {
+  string content = 1;
+  TextCleanerParams params = 2;
+}
+
+message TextCleanerResponse {
+  string processed_content = 1;
+  repeated CleanTokenList tokens = 2;
+}
+
+message CleanTokenList {
+  oneof tokens {
+    CleanToken cleaned = 1;
+    TagToken tag = 2;
+  }
+}
+
+/*
+The basic information on a non-processed token from an input text.
+ */
+message Token {
+  string name = 1;  // the token string
+  int32 index = 2;
+  int32 span_from = 3; // char index in original text
+  int32 span_to = 4;   // last char index, excluding, in original text
+}
+
+/*
+Processed tokens. We add an index field to each processing step, since an original token can result in more
+than one processed tokens.
+ */
+
+/*
+Clean token. Should not contain any characters later processing steps cannot handle.
+ */
+message CleanToken {
+  Token original_token = 1;
+  string name = 2;
+  int32 index = 3;
+}
+
+/*
+Normalized token. Should not contain any digits or symbols not processable by a g2p module.
+A normalized token might have been processed by a spell checker.
+ */
+message NormalizedToken {
+  CleanToken clean_token = 1;
+  string name = 2;
+  int32 index = 3;
+  NormalizationDomain domain = 4;
+}
+
+/*
+Transcribed token. A phonetic representation of a normalizedToken.
+ */
+message TranscribedToken {
+  NormalizedToken normalized_token = 1;
+  string name = 2;
+  int32 index = 3;
+  PhonemeDescription description = 4;
+}
+
+/*
+Tag token. Representing an SSML or another kind of xml-tag.
+If both start and end are set to False (default), the token is a stand-alone tag without a
+corresponding closing tag.
+ */
+message TagToken {
+  string name = 1;
+  int32 index = 2;
+  bool ssml_start = 3; // default: False
+  bool ssml_end = 4; // default: False
+}
+
+/*
+Parameters for the text cleaner. Default values are given for each field, thus
+only necessary to provide these parameters if the deviate from the defaults.
+ */
+message TextCleanerParams {
+  map<string, string> char_replacement = 1; // default: empty map
+  string emoji_replacement = 2; // default: '.' -> TODO: define string message
+  string punct_replacement = 3; // default: ''
+  repeated string alphabet= 4; // default: None (empty)
+  repeated string punct_set = 5; // default: None (empty)
+  repeated string preserve_string = 6; // default: None (empty)
+  bool preserve_emojis = 7; // default: False
+  bool clean_emojis = 8; // default: False
+  bool delete_labelled_translations = 9; // default: False
+}
+
+/*
+Describes the phoneme string: alphabet, output format, syllabification and labeling.
+Default: X-SAMPA in plain format without syllabification and stress labeling
+ */
+message PhonemeDescription {
+  // phoneme alphabet (IPA, SAMPA, ...)
+  PhoneticAlphabet alphabet = 1;
+  // The format of the phoneme string (CMU, plain, ...)
+  PhonemeFormat format = 2;
+  bool syllabified = 3;
+  bool stress_labels = 4;
+}
+
+/*
+ Possible normalization domains. Default OTHER
+ */
+enum NormalizationDomain {
+  NORM_DOMAIN_INVALID = 0;
+  NORM_DOMAIN_SPORT = 1;
+  NORM_DOMAIN_OTHER = 2;
+}
+
+/*
+Phonetic Alphabet. Default: X-SAMPA
+ */
+enum PhoneticAlphabet {
+  PHONETIC_ALPHABET_INVALID = 0;
+  PHONETIC_ALPHABET_IPA = 1;
+  PHONETIC_ALPHABET_SAMPA = 2;
+}
+
+/*
+Phoneme string format. Default: plain
+ */
+enum PhonemeFormat {
+  PHONEME_INVALID = 0;
+  PHONEME_CMU = 1;
+  PHONEME_PLAIN = 2;
+}
+
+enum ABI_VERSION {
+  ABI_VERSION_INVALID = 0;
+  ABI_VERSION_CURRENT = 0x010000;
+}
+
+message AbiVersionResponse {
+  ABI_VERSION  version = 1;
+}
