@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+package com.grammatek.text_preprocessing;
 /*
 
 Messages for TTS frontend pipeline, containing requests and responses for different requirements:
@@ -83,7 +84,7 @@ message TextCleanRequest {
   TextCleanerParams params = 2;
 }
 
-message TextCleanerResponse {
+message TextCleanResponse {
   string processed_content = 1;
   repeated CleanTokenList tokens = 2;
 }
