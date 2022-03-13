@@ -1,6 +1,24 @@
 syntax = "proto3";
 
 /*
+
+Messages for TTS frontend pipeline, containing requests and responses for different requirements:
+  - a complete text preprocessing pipeline returning a phonetic representation of the input
+  - normalizer request, returning a tts-normalized version of the input
+  - text-cleaning request, returning a cleaned version of the input, i.e. the input without any non-valid characters
+  and where defined sets of characters have been replaced by other characters
+  - g2p request, returning a phonetic representation of the input
+
+  Some parameters:
+  - for text-cleaning, parameters that deviate from the default settings can be included in the request message
+  - for complete pipeline and normalizing, the normalizer domain can be included in the request message, as well
+  as a boolean to indicate if a spell checker should be run on the normalized output
+  - for complete pipeline and g2p, parameters for g2p can be included in the message: which alphabet should be used
+  and if the transcripts should be syllabified and contain stress labels
+
+ */
+
+/*
 Request a complete preprocessing pipeline from raw text to phonetic representation
  */
 message PreprocessRequest {
@@ -21,6 +39,15 @@ message TranscribedTokenList {
     TranscribedToken transcribed = 1;
     TagToken tag = 2;
   }
+}
+
+/*
+Request phonetic transcription of the input text. Same response as PreprocessRequest.
+Only use G2PRequest for input that you know that is normalized for the G2P module.
+ */
+message G2PRequest {
+  string content = 1;
+  PhonemeDescription description = 2;
 }
 
 /*
@@ -48,10 +75,11 @@ message NormalizedTokenList {
 }
 
 /*
-Request a normalizer pipeline from raw text to tts-normalized text.
+Request text-cleaning from raw text to clean text.
  */
 message TextCleanRequest {
   string content = 1;
+  // if text cleaner should deviate from default settings, set the corresponding parameters
   TextCleanerParams params = 2;
 }
 
@@ -125,6 +153,10 @@ message TagToken {
 }
 
 /*
+Parameter messages for different requests
+ */
+
+/*
 Parameters for the text cleaner. Default values are given for each field, thus
 only necessary to provide these parameters if the deviate from the defaults.
  */
@@ -141,6 +173,7 @@ message TextCleanerParams {
 }
 
 /*
+Parameters for requests containing g2p.
 Describes the phoneme string: alphabet, output format, syllabification and labeling.
 Default: X-SAMPA in plain format without syllabification and stress labeling
  */
@@ -154,7 +187,8 @@ message PhonemeDescription {
 }
 
 /*
- Possible normalization domains. Default OTHER
+Parameters for requests containing normalization.
+Possible normalization domains. Default OTHER
  */
 enum NormalizationDomain {
   NORM_DOMAIN_INVALID = 0;
