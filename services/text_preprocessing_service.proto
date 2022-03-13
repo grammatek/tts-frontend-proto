@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+import "messages/text_preprocessing_message.proto";
+import "google/protobuf/empty.proto";
+
+package com.grammatek.text_preprocessing;
+
+// Service for text preprocessing for TTS
+service TextPreprocessing {
+
+  // Preprocess text for TTS, including conversion to phonetic representation (g2p)
+  rpc Preprocess(PreprocessRequest) returns (PreprocessedResponse) {}
+
+  // Normalize text for TTS, returns normalized text prepared for g2p
+  rpc Normalize(NormalizeRequest) returns (NormalizedResponse) {}
+
+  // Clean text for TTS, returns clean text without non-valid characters (not normalized!)
+  rpc Clean(TextCleanRequest) returns (TextCleanResponse) {}
+
+  // Transcribe text for TTS, returns phonetic representation of input text
+  rpc Transcribe(G2PRequest) returns (PreprocessedResponse) {}
+
+  // Default settings for the text cleaner
+  rpc GetDefaultTextCleanerParamters(google.protobuf.Empty) returns (TextCleanerParams) {}
+
+  // Default value for the normalizer domain
+  rpc GetDefaultNormalizationDomain(google.protobuf.Empty) returns (NormalizationDomain) {}
+
+  // Default values for the phoneme description
+  rpc GetDefaultPhonemeDescription(google.protobuf.Empty) returns (PhonemeDescription) {}
+
+  rpc GetVersion(google.protobuf.Empty) returns (AbiVersionResponse) {}
+}
