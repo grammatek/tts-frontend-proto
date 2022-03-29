@@ -217,11 +217,15 @@ message PhonemeDescription {
   bool word_separated = 5;
 }
 
+message NormalizationDomain {
+  Domain norm_domain = 1;
+}
+
 /*
 Parameters for requests containing normalization.
 Possible normalization domains. Default OTHER
  */
-enum NormalizationDomain {
+enum Domain {
   NORM_DOMAIN_INVALID = 0;
   NORM_DOMAIN_SPORT = 1;
   NORM_DOMAIN_OTHER = 2;
