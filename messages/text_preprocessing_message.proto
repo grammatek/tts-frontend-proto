@@ -85,6 +85,7 @@ message TextCleanRequest {
   string content = 1; // the input string to process
   // if text cleaner should deviate from default settings, set the corresponding parameters
   TextCleanerParams params = 2;
+  bool parse_html = 3; // if the content should be parsed as html before cleaning, parse_html is True, default is False
 }
 
 message TextCleanResponse {
