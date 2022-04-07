@@ -1,13 +1,13 @@
 syntax = "proto3";
 
-import "messages/text_preprocessing_message.proto";
+import "messages/text_message.proto";
 import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
 
-package com.grammatek.text_preprocessing;
+package com.grammatek.text;
 
 // Service for text preprocessing for TTS
-service TextPreprocessing {
+service Preprocessing {
 
   // Preprocess text for TTS, including conversion to phonetic representation (g2p)
   rpc Preprocess(PreprocessRequest) returns (PreprocessedResponse) {
@@ -41,27 +41,13 @@ service TextPreprocessing {
     };
   }
 
-  // Default settings for the text cleaner
-  rpc GetDefaultTextCleanerParamters(google.protobuf.Empty) returns (TextCleanerParams) {
+  // Default settings for the text processing pipeline, including parameters for text cleaning,
+  // normalizing and transcription (g2p)
+  rpc GetDefaultParameters(google.protobuf.Empty) returns (DefaultProcessingResponse) {}
     option (google.api.http) = {
-      get: "/defaulttextcleanerparamters"
+      get: "/defaultparameters"
     };
-  }
-
-  // Default value for the normalizer domain
-  rpc GetDefaultNormalizationDomain(google.protobuf.Empty) returns (NormalizationDomain) {
-    option (google.api.http) = {
-      get: "/defaultnormalizationdomain"
-    };
-  }
-
-  // Default values for the phoneme description
-  rpc GetDefaultPhonemeDescription(google.protobuf.Empty) returns (PhonemeDescription) {
-    option (google.api.http) = {
-      get: "/defaultphonemedescription"
-    };
-  }
-
+    
   rpc GetVersion(google.protobuf.Empty) returns (AbiVersionResponse) {
     option (google.api.http) = {
       get: "/version"

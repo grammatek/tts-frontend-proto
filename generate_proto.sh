@@ -18,8 +18,8 @@ mkdir -p generated
 # -I./proto/
 # --python_out=src/generated/
 # --grpc_python_out=src/generated/
-# proto/services/text_preprocessing_service.proto
-# proto/messages/text_preprocessing_message.proto
+# proto/services/preprocessing_service.proto
+# proto/messages/text_message.proto
 
-python3 -m grpc_tools.protoc -I. --python_out=generated/ --grpc_python_out=generated/ services/text_preprocessing_service.proto
-python3 -m grpc_tools.protoc -I. --python_out=generated/ --grpc_python_out=generated/ messages/text_preprocessing_message.proto
+python3 -m grpc_tools.protoc -I. --python_out=generated/ --grpc_python_out=generated/ services/preprocessing_service.proto
+python3 -m grpc_tools.protoc -I. --python_out=generated/ --grpc_python_out=generated/ messages/text_message.proto

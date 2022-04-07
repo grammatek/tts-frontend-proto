@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package com.grammatek.text_preprocessing;
+package com.grammatek.text;
 /*
 
 Messages for TTS frontend pipeline, containing requests and responses for different requirements:
@@ -69,6 +69,15 @@ message NormalizedResponse {
   repeated NormalizedTokenList tokens = 2;
   NormalizationDomain domain = 3;
   bool is_spellcorrected = 4;
+}
+
+/*
+Default parameters/settings for the processing modules: text cleaner, normalizer and transcriber (g2)
+ */
+message DefaultProcessingResponse {
+  TextCleanerParams text_cleaner_params = 1;
+  NormalizationDomain normalization_domain = 2;
+  PhonemeDescription phoneme_description = 3;
 }
 
 message NormalizedTokenList {
