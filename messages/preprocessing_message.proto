@@ -27,6 +27,16 @@ message PreprocessRequest {
   TextCleanerParams params = 2;
   NormalizationDomain domain = 3;
   PhonemeDescription description = 4;
+  // A user defined pronunciation dictionary. If a key in this dictionary exists in the default dictionary,
+  // the user defined transcription will override the default transcription. Be careful to use the
+  // same transcription system and the same dialect as defined in the phonemeDescription!
+  // The custom pronunciation dictionary should contain plain transcriptions, e.g. no syllabification or stress,
+  // as those are added automatically
+  map<string, string> pronunciation_dict = 5;
+  // TagTokens represent tags like '<sil>'. Those might not be wanted in the content response,
+  // if a phonetic transcription only is wanted set the following to True. Default is False.
+  // The TagTokens will always be accessible in the token list response.
+  bool no_tag_tokens_in_content = 6;
 }
 
 message PreprocessedResponse {
@@ -222,9 +232,18 @@ message PhonemeDescription {
   PhoneticAlphabet alphabet = 1;
   // The format of the phoneme string (CMU, plain, ...)
   PhonemeFormat format = 2;
-  bool syllabified = 3;
-  bool stress_labels = 4;
-  bool word_separated = 5;
+  // Dialect to use when transcribing
+  Dialect dialect = 3;
+  // g2p model to use, default is LSTM
+  G2P_MODEL model = 4;
+  // Which symbol to use as a syllable separator. Default is empty string which means no syllabification will
+  // be performed
+  string syllabified = 5;
+  // Label syllables with stress, default is False
+  bool stress_labels = 6;
+  // Which symbol to use as a word separator. Default is empty string which means do not use a word separator
+  // The symbol can be the same as the syllable symbol, if that is what the TTS model accepts
+  string word_separator = 7;
 }
 
 message NormalizationDomain {
@@ -258,6 +277,24 @@ enum PhonemeFormat {
   // Carnegie Mellon University phonetic dictionary format
   PHONEME_CMU = 1;
   PHONEME_PLAIN = 2;
+}
+
+/*
+Dialect for the transcription. Default: standard
+ */
+enum Dialect {
+  DIALECT_INVALID = 0;
+  DIALECT_STANDARD = 1;
+  DIALECT_NORTH = 2;
+}
+/*
+What model to use for transcribing: fast or high-quality.
+Default ist LSTM (slow, high quality)
+ */
+enum G2P_MODEL {
+  MODEL_INVALID = 0;
+  MODEL_LSTM = 1;
+  MODEL_THRAX = 2;
 }
 
 enum ABI_VERSION {
