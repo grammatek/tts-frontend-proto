@@ -235,7 +235,7 @@ message PhonemeDescription {
   // Dialect to use when transcribing
   Dialect dialect = 3;
   // g2p model to use, default is LSTM
-  G2P_MODEL model = 4;
+  G2PModel model = 4;
   // Which symbol to use as a syllable separator. Default is empty string which means no syllabification will
   // be performed
   string syllabified = 5;
@@ -291,7 +291,7 @@ enum Dialect {
 What model to use for transcribing: fast or high-quality.
 Default ist LSTM (slow, high quality)
  */
-enum G2P_MODEL {
+enum G2PModel {
   MODEL_INVALID = 0;
   MODEL_LSTM = 1;
   MODEL_THRAX = 2;
