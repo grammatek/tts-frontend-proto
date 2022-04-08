@@ -36,6 +36,10 @@ message PreprocessRequest {
   // if a phonetic transcription only is wanted set the following to True. Default is False.
   // The TagTokens will always be accessible in the token list response.
   bool no_tag_tokens_in_content = 6;
+  // The language identification (ISO 639 code for the language name - ISO 3166 country code)
+  // for specifying the synthesis language.
+  // Default: is-IS
+  string language_code = 10;
 }
 
 message PreprocessedResponse {
@@ -59,6 +63,11 @@ message G2PRequest {
   // the input string to process
   string content = 1;
   PhonemeDescription description = 2;
+
+  // The language identification (ISO 639 code for the language name - ISO 3166 country code)
+  // for specifying the synthesis language.
+  // Default: is-IS
+  string language_code = 7;
 }
 
 // Request a normalizer pipeline from raw text to tts-normalized text.
@@ -69,6 +78,11 @@ message NormalizeRequest {
   NormalizationDomain domain = 3;
   // if true, a spell corrector will be run over the normalized text. Default: False
   bool do_spellcorrect = 4;
+
+  // The language identification (ISO 639 code for the language name - ISO 3166 country code)
+  // for specifying the synthesis language.
+  // Default: is-IS
+  string language_code = 7;
 }
 
 message NormalizedResponse {
@@ -102,6 +116,11 @@ message TextCleanRequest {
   TextCleanerParams params = 2;
   // if the content should be parsed as html before cleaning, parse_html is True, default is False
   bool parse_html = 3;
+
+  // The language identification (ISO 639 code for the language name - ISO 3166 country code)
+  // for specifying the synthesis language.
+  // Default: is-IS
+  string language_code = 7;
 }
 
 message TextCleanResponse {
