@@ -1,18 +1,34 @@
 syntax = "proto3";
 
-import "messages/text_message.proto";
+import "messages/preprocessing_message.proto";
 import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
 
-package com.grammatek.text;
+package com.grammatek.preprocessing;
+option go_package = "com.grammatek/preprocessing";
 
-// Service for text preprocessing for TTS
+// Service for text preprocessing, e.g text cleaning, text normalization for TTS, transcribing text to G2P, etc.
+//
+// Messages for TTS frontend pipeline, containing requests and responses for different requirements:
+//   - a complete text preprocessing pipeline returning a phonetic representation of the input
+//   - normalizer request, returning a tts-normalized version of the input
+//   - text-cleaning request, returning a cleaned version of the input, i.e. the input without any non-valid characters
+//     and where defined sets of characters have been replaced by other characters
+//   - g2p request, returning a phonetic representation of the input
+//
+//   Some parameters:
+//   - for text-cleaning, parameters that deviate from the default settings can be included in the request message
+//   - for complete pipeline and normalizing, the normalizer domain can be included in the request message, as well
+//     as a boolean to indicate if a spell checker should be run on the normalized output
+//   - for complete pipeline and g2p, parameters for g2p can be included in the message: which alphabet should be used
+//     and if the transcripts should be syllabified and contain stress labels
+//
 service Preprocessing {
 
   // Preprocess text for TTS, including conversion to phonetic representation (g2p)
   rpc Preprocess(PreprocessRequest) returns (PreprocessedResponse) {
     option (google.api.http) = {
-      post: "/preprocess"
+      post: "/tts_preprocess"
       body: "*"
     };
   }
@@ -20,12 +36,12 @@ service Preprocessing {
   // Normalize text for TTS, returns normalized text prepared for g2p
   rpc Normalize(NormalizeRequest) returns (NormalizedResponse) {
     option (google.api.http) = {
-      post: "/normalize"
+      post: "/tts_normalize"
       body: "*"
     };
   }
 
-  // Clean text for TTS, returns clean text without non-valid characters (not normalized!)
+  // Clean text, returns clean text without non-valid characters (not normalized!)
   rpc Clean(TextCleanRequest) returns (TextCleanResponse) {
     option (google.api.http) = {
       post: "/clean"
@@ -36,18 +52,20 @@ service Preprocessing {
   // Transcribe text for TTS, returns phonetic representation of input text
   rpc Transcribe(G2PRequest) returns (PreprocessedResponse) {
     option (google.api.http) = {
-      post: "/transcribe"
+      post: "/g2p_transcribe"
       body: "*"
     };
   }
 
   // Default settings for the text processing pipeline, including parameters for text cleaning,
   // normalizing and transcription (g2p)
-  rpc GetDefaultParameters(google.protobuf.Empty) returns (DefaultProcessingResponse) {}
+  rpc GetDefaultParameters(google.protobuf.Empty) returns (DefaultProcessingResponse){
     option (google.api.http) = {
       get: "/defaultparameters"
     };
-    
+  }
+
+  // Returns the current ABI version of the service
   rpc GetVersion(google.protobuf.Empty) returns (AbiVersionResponse) {
     option (google.api.http) = {
       get: "/version"

@@ -1,29 +1,28 @@
 syntax = "proto3";
 
-package com.grammatek.text;
-/*
+package com.grammatek.preprocessing;
+option go_package = "com.grammatek/preprocessing";
 
-Messages for TTS frontend pipeline, containing requests and responses for different requirements:
-  - a complete text preprocessing pipeline returning a phonetic representation of the input
-  - normalizer request, returning a tts-normalized version of the input
-  - text-cleaning request, returning a cleaned version of the input, i.e. the input without any non-valid characters
-  and where defined sets of characters have been replaced by other characters
-  - g2p request, returning a phonetic representation of the input
+//
+// Messages for TTS frontend pipeline, containing requests and responses for different requirements:
+//   - a complete text preprocessing pipeline returning a phonetic representation of the input
+//   - normalizer request, returning a tts-normalized version of the input
+//   - text-cleaning request, returning a cleaned version of the input, i.e. the input without any non-valid characters
+//   and where defined sets of characters have been replaced by other characters
+//   - g2p request, returning a phonetic representation of the input
+//
+//   Some parameters:
+//   - for text-cleaning, parameters that deviate from the default settings can be included in the request message
+//   - for complete pipeline and normalizing, the normalizer domain can be included in the request message, as well
+//   as a boolean to indicate if a spell checker should be run on the normalized output
+//   - for complete pipeline and g2p, parameters for g2p can be included in the message: which alphabet should be used
+//   and if the transcripts should be syllabified and contain stress labels
+//
 
-  Some parameters:
-  - for text-cleaning, parameters that deviate from the default settings can be included in the request message
-  - for complete pipeline and normalizing, the normalizer domain can be included in the request message, as well
-  as a boolean to indicate if a spell checker should be run on the normalized output
-  - for complete pipeline and g2p, parameters for g2p can be included in the message: which alphabet should be used
-  and if the transcripts should be syllabified and contain stress labels
-
- */
-
-/*
-Request a complete preprocessing pipeline from raw text to phonetic representation
- */
+// Request a complete preprocessing pipeline from raw text to phonetic representation
 message PreprocessRequest {
-  string content = 1; // the input string to process
+  // the input string to process
+  string content = 1;
   TextCleanerParams params = 2;
   NormalizationDomain domain = 3;
   PhonemeDescription description = 4;
@@ -40,7 +39,8 @@ message PreprocessRequest {
 }
 
 message PreprocessedResponse {
-  string processed_content = 1; // the processed input as string
+  // the processed input as string
+  string processed_content = 1;
   // the processed input as a list of tokens, containing the processing history step by step
   repeated TranscribedTokenList tokens = 2;
   PhonemeDescription description = 3;
@@ -53,20 +53,18 @@ message TranscribedTokenList {
   }
 }
 
-/*
-Request phonetic transcription of the input text. Same response as PreprocessRequest.
-Only use G2PRequest for input that you know that is normalized for the G2P module.
- */
+// Request phonetic transcription of the input text. Same response as PreprocessRequest.
+// Only use G2PRequest for input that you know that is normalized for the G2P module.
 message G2PRequest {
-  string content = 1; // the input string to process
+  // the input string to process
+  string content = 1;
   PhonemeDescription description = 2;
 }
 
-/*
-Request a normalizer pipeline from raw text to tts-normalized text.
- */
+// Request a normalizer pipeline from raw text to tts-normalized text.
 message NormalizeRequest {
-  string content = 1; // the input string to process
+  // the input string to process
+  string content = 1;
   TextCleanerParams params = 2;
   NormalizationDomain domain = 3;
   // if true, a spell corrector will be run over the normalized text. Default: False
@@ -74,16 +72,15 @@ message NormalizeRequest {
 }
 
 message NormalizedResponse {
-  string processed_content = 1; // the normalized input string as string
+  // the normalized input string as string
+  string processed_content = 1;
   // the processed input as a list of tokens, containing the processing history step by step
   repeated NormalizedTokenList tokens = 2;
   NormalizationDomain domain = 3;
   bool is_spellcorrected = 4;
 }
 
-/*
-Default parameters/settings for the processing modules: text cleaner, normalizer and transcriber (g2)
- */
+// Default parameters/settings for the processing modules: text cleaner, normalizer and transcriber (g2)
 message DefaultProcessingResponse {
   TextCleanerParams text_cleaner_params = 1;
   NormalizationDomain normalization_domain = 2;
@@ -97,18 +94,19 @@ message NormalizedTokenList {
   }
 }
 
-/*
-Request text-cleaning from raw text to clean text.
- */
+// Request text-cleaning from raw text to clean text.
 message TextCleanRequest {
-  string content = 1; // the input string to process
+  // the input string to process
+  string content = 1;
   // if text cleaner should deviate from default settings, set the corresponding parameters
   TextCleanerParams params = 2;
-  bool parse_html = 3; // if the content should be parsed as html before cleaning, parse_html is True, default is False
+  // if the content should be parsed as html before cleaning, parse_html is True, default is False
+  bool parse_html = 3;
 }
 
 message TextCleanResponse {
-  string processed_content = 1; // the cleaned input string as string
+  // the cleaned input string as string
+  string processed_content = 1;
   // the cleaned input as a list of tokens, containing the original and the clean version of each token,
   // plus tagTokens, if any were added.
   repeated CleanTokenList tokens = 2;
@@ -121,95 +119,102 @@ message CleanTokenList {
   }
 }
 
-/*
-The basic information on a non-processed token from an input text.
- */
+// The basic information on a non-processed token from an input text.
 message Token {
-  string name = 1;  // the token string
-  int32 index = 2;  // index of the token in the original text
-  int32 span_from = 3; // char index in original text
-  int32 span_to = 4;   // last char index, excluding, in original text
+  // the token string
+  string name = 1;
+  // index of the token in the original text
+  int32 index = 2;
+  // char index in original text
+  int32 span_from = 3;
+  // last char index, excluding, in original text
+  int32 span_to = 4;
 }
 
 /*
-Processed tokens. We add an index field to each processing step, since an original token can result in more
-than one processed tokens.
-Note: the parameter 'index' in the processed tokens is mainly for ordering during processing steps and might
-not be unique, i.e. two or more processed tokens can have the same index if they were generated from one
-original token, or the original index might have incremented because of inserted tagTokens.
-Always refer to the original Token.index when positioning tokens in the original text.
+  Processed tokens. We add an index field to each processing step, since an original token can result in more
+  than one processed tokens.
+  Note: the parameter 'index' in the processed tokens is mainly for ordering during processing steps and might
+  not be unique, i.e. two or more processed tokens can have the same index if they were generated from one
+  original token, or the original index might have incremented because of inserted tagTokens.
+  Always refer to the original Token.index when positioning tokens in the original text.
  */
 
-/*
-Clean token. Should not contain any characters later processing steps cannot handle.
- */
+// Clean token. Should not contain any characters later processing steps cannot handle.
 message CleanToken {
   Token original_token = 1;
-  string name = 2; // the cleaned version of the token
+  // the cleaned version of the token
+  string name = 2;
   int32 index = 3;
 }
 
-/*
-Normalized token. Should not contain any digits or symbols not processable by a g2p module.
-A normalized token might have been processed by a spell checker.
- */
+// Normalized token. Should not contain any digits or symbols not processable by a g2p module.
+// A normalized token might have been processed by a spell checker.
 message NormalizedToken {
   CleanToken clean_token = 1;
-  string name = 2; // the normalized version of the token
+  // the normalized version of the token
+  string name = 2;
   int32 index = 3;
   NormalizationDomain domain = 4;
 }
 
-/*
-Transcribed token. A phonetic representation of a normalizedToken.
- */
+// Transcribed token. A phonetic representation of a normalizedToken.
 message TranscribedToken {
   NormalizedToken normalized_token = 1;
-  string name = 2; // the transcribed version of the token
+  // the transcribed version of the token
+  string name = 2;
   int32 index = 3;
   PhonemeDescription description = 4;
 }
 
-/*
-Tag token. Representing an SSML or another kind of xml-tag.
-If both start and end are set to False (default), the token is a stand-alone tag without a
-corresponding closing tag.
- */
+// Tag token. Representing an SSML or another kind of xml-tag.
+// If both start and end are set to False (default), the token is a stand-alone tag without a
+// corresponding closing tag.
 message TagToken {
-  string name = 1; // label of the tag
+  // label of the tag
+  string name = 1;
   int32 index = 2;
-  bool ssml_start = 3; // default: False
-  bool ssml_end = 4; // default: False
+  // default: False
+  bool ssml_start = 3;
+  // default: False
+  bool ssml_end = 4;
 }
 
 /*
-Parameter messages for different requests
+  Parameter messages for different requests
  */
 
-/*
-Parameters for the text cleaner. Default values are given for each field, thus
-only necessary to provide these parameters if the deviate from the defaults.
- */
-message TextCleanerParams {
+// Parameters for the text cleaner. Default values are given for each field, thus
+// only necessary to provide these parameters if the deviate from the defaults.
+ message TextCleanerParams {
   // change the default replacement of emojis
-  EmojiReplacement emoji_replacement = 1; // default: '.'
+  // default: '.'
+  EmojiReplacement emoji_replacement = 1;
   // add char or string replacements extending default replacements in the text cleaner
-  map<string, string> char_replacement = 2; // default: empty map
+  // default: empty map
+  map<string, string> char_replacement = 2;
   // add a common replacement for all common punctuation marks
-  string punct_replacement = 3; // default: '' (punctuation marks ['.',',',':','!','?'] not replaced)
+  // default: '' (punctuation marks ['.',',',':','!','?'] not replaced)
+  string punct_replacement = 3;
   // define valid characters, default is the Icelandic alphabet
-  repeated string alphabet= 4; // default: None (empty)
+  // default: None (empty)
+  repeated string alphabet= 4;
   // define punctuation chars to preserve, default is: ['.',',',':','!','?']
-  repeated string punct_set = 5; // default: None (empty)
+  // default: None (empty)
+  repeated string punct_set = 5;
   // define certain chars or strings to preserve regardless of what chars or symbols they contain
-  repeated string preserve_string = 6; // default: None (empty)
+  // default: None (empty)
+  repeated string preserve_string = 6;
   // if True, don't replace emojis
-  bool preserve_emojis = 7; // default: False
+  // default: False
+  bool preserve_emojis = 7;
   // if True, replace emojis with their description instead of a '.'
-  bool clean_emojis = 8; // default: False
+  // default: False
+  bool clean_emojis = 8;
   // if True, delete text labelled as foreign. Default behaviour is to add an SSML-lang tag around
   // text labelled as foreign
-  bool delete_labelled_translations = 9; // default: False
+  // default: False
+  bool delete_labelled_translations = 9;
 }
 
 message EmojiReplacement {
@@ -217,16 +222,17 @@ message EmojiReplacement {
   string replacement = 1;
 }
 
-/*
-Parameters for requests containing g2p.
-Describes the phoneme string: alphabet, output format, syllabification and labeling.
-Default: X-SAMPA in plain format without syllabification, stress labeling, and word separators.
-Examples, input string 'hljóðritaður texti' (e. 'phonetically transcribed text'):
-Default: 'l_0 j ou D r I t a D Y r t_h E k s t I'
-SAMPA, syllabified, stress labels, word separated ('-'): 'l_0 j ou1 D . r I0 . t a0 . D Y0 r - t_h E1 k s . t I0'
-SAMPA, CMU format:
-  ("hljóðritaður" nil (((l_0 j ou D ) 1) ((r I ) 0) ((t a ) 0) ((D Y r ) 0))) ("texti" nil (((t_h E k s ) 1) ((t I ) 0)))
- */
+// Parameters for requests containing g2p.
+// Describes the phoneme string: alphabet, output format, syllabification and labeling.
+// Default: X-SAMPA in plain format without syllabification, stress labeling, and word separators.
+//
+// Examples
+//      input string 'hljóðritaður texti' (e. 'phonetically transcribed text'):
+//      Default: 'l_0 j ou D r I t a D Y r t_h E k s t I'
+//      SAMPA, syllabified, stress labels, word separated ('-'):
+//          'l_0 j ou1 D . r I0 . t a0 . D Y0 r - t_h E1 k s . t I0'
+//      SAMPA, CMU format:
+//          ("hljóðritaður" nil (((l_0 j ou D ) 1) ((r I ) 0) ((t a ) 0) ((D Y r ) 0))) ("texti" nil (((t_h E k s ) 1) ((t I ) 0)))
 message PhonemeDescription {
   // phoneme alphabet (IPA, SAMPA, ...)
   PhoneticAlphabet alphabet = 1;
@@ -250,28 +256,26 @@ message NormalizationDomain {
   Domain norm_domain = 1;
 }
 
-/*
-Parameters for requests containing normalization.
-Possible normalization domains. Default OTHER
- */
+
+// Parameters for requests containing normalization.
+// Possible normalization domains.
+// Default: NORM_DOMAIN_OTHER
 enum Domain {
   NORM_DOMAIN_INVALID = 0;
   NORM_DOMAIN_SPORT = 1;
   NORM_DOMAIN_OTHER = 2;
 }
 
-/*
-Phonetic Alphabet. Default: X-SAMPA
- */
+// Phonetic Alphabet
+// Default: PHONETIC_ALPHABET_SAMPA
 enum PhoneticAlphabet {
   PHONETIC_ALPHABET_INVALID = 0;
   PHONETIC_ALPHABET_IPA = 1;
   PHONETIC_ALPHABET_SAMPA = 2;
 }
 
-/*
-Phoneme string format. Default: plain
- */
+// Phoneme string format
+// Default: PHONEME_PLAIN
 enum PhonemeFormat {
   PHONEME_INVALID = 0;
   // Carnegie Mellon University phonetic dictionary format
@@ -279,29 +283,33 @@ enum PhonemeFormat {
   PHONEME_PLAIN = 2;
 }
 
-/*
-Dialect for the transcription. Default: standard
- */
+// Dialect for the transcription.
+// Default: DIALECT_STANDARD
 enum Dialect {
   DIALECT_INVALID = 0;
   DIALECT_STANDARD = 1;
   DIALECT_NORTH = 2;
 }
-/*
-What model to use for transcribing: fast or high-quality.
-Default ist LSTM (slow, high quality)
- */
+
+// What model to use for transcribing: fast or high-quality.
+// Default: MODEL_LSTM 
 enum G2PModel {
   MODEL_INVALID = 0;
+  // slow, high quality
   MODEL_LSTM = 1;
+  // fast, medium quality
   MODEL_THRAX = 2;
 }
 
+// Possible ABI versions
 enum ABI_VERSION {
+  option allow_alias = true;
   ABI_VERSION_INVALID = 0;
-  ABI_VERSION_CURRENT = 0x010000;
+  ABI_VERSION_000100 = 0x000100;
+  ABI_VERSION_CURRENT = 0x000100;
 }
 
+// Describes the currently running ABI version of the server
 message AbiVersionResponse {
   ABI_VERSION  version = 1;
 }
