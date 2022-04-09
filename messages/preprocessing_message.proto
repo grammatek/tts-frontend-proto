@@ -79,6 +79,10 @@ message NormalizeRequest {
   // if true, a spell corrector will be run over the normalized text. Default: False
   bool do_spellcorrect = 4;
 
+  // TagTokens represent tags like '<sil>'. Those might not be wanted in the content response,
+  // if a phonetic transcription only is wanted set the following to True. Default is False.
+  // The TagTokens will always be accessible in the token list response.
+  bool no_tag_tokens_in_content = 6;
   // The language identification (ISO 639 code for the language name - ISO 3166 country code)
   // for specifying the synthesis language.
   // Default: is-IS
