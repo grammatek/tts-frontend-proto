@@ -43,8 +43,8 @@ message PreprocessRequest {
 }
 
 message PreprocessedResponse {
-  // the processed input as string
-  string processed_content = 1;
+  // the processed input as a list of strings representing sentences or max TTS processing chunks of tokens
+  repeated string processed_content = 1;
   // the processed input as a list of tokens, containing the processing history step by step
   repeated TranscribedTokenList tokens = 2;
   PhonemeDescription description = 3;
@@ -90,8 +90,8 @@ message NormalizeRequest {
 }
 
 message NormalizedResponse {
-  // the normalized input string as string
-  string processed_content = 1;
+  // the normalized input as a list of strings representing sentences or max TTS processing chunks of tokens
+  repeated string processed_content = 1;
   // the processed input as a list of tokens, containing the processing history step by step
   repeated NormalizedTokenList tokens = 2;
   NormalizationDomain domain = 3;
