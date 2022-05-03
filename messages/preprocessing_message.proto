@@ -21,10 +21,12 @@ option go_package = "com.grammatek/preprocessing";
 
 // Request a complete preprocessing pipeline from raw text to phonetic representation
 message PreprocessRequest {
-  // the input string to process
+  // The input string to process. This string can represent an html-epub element, make sure then to set
+  // parse_html = True in norm_request. In the default case the preprocessing pipeline expects raw text.
   string content = 1;
-  TextCleanerParams params = 2;
-  NormalizationDomain domain = 3;
+  // Settings for the text cleaning and normalization module.
+  NormalizeRequest norm_request = 2;
+  // Settings for the transcription module.
   PhonemeDescription description = 4;
   // A user defined pronunciation dictionary. If a key in this dictionary exists in the default dictionary,
   // the user defined transcription will override the default transcription. Be careful to use the
@@ -36,20 +38,27 @@ message PreprocessRequest {
   // if a phonetic transcription only is wanted set the following to True. Default is False.
   // The TagTokens will always be accessible in the token list response.
   bool no_tag_tokens_in_content = 6;
+  bool parse_html = 7;
+
   // The language identification (ISO 639 code for the language name - ISO 3166 country code)
   // for specifying the synthesis language.
   // Default: is-IS
   string language_code = 10;
 }
 
+// The response message resulting from a preprocessRequest
 message PreprocessedResponse {
-  // the processed input as a list of strings representing sentences or max TTS processing chunks of tokens
+  // The processed input as a list of strings representing sentences or max TTS processing chunks of tokens.
+  // Depending on the settings in the request, the processed_content string will contain tag tokens or not.
   repeated string processed_content = 1;
-  // the processed input as a list of tokens, containing the processing history step by step
+  // The processed input as a list of tokens, containing the processing history step by step. The token list
+  // always contains the tag tokens, regardless of the settings in the request.
   repeated TranscribedTokenList tokens = 2;
+  // TODO: do we need this here in the response?
   PhonemeDescription description = 3;
 }
 
+// A list of transcribedTokens and tagTokens, embedded in a preprocessedResponse
 message TranscribedTokenList {
   oneof tokens {
     TranscribedToken transcribed = 1;
@@ -60,8 +69,9 @@ message TranscribedTokenList {
 // Request phonetic transcription of the input text. Same response as PreprocessRequest.
 // Only use G2PRequest for input that you know that is normalized for the G2P module.
 message G2PRequest {
-  // the input string to process
+  // The input string to transcribe. The string needs to be normalized for g2p
   string content = 1;
+  // Settings for the transcription module
   PhonemeDescription description = 2;
 
   // The language identification (ISO 639 code for the language name - ISO 3166 country code)
@@ -72,39 +82,50 @@ message G2PRequest {
 
 // Request a normalizer pipeline from raw text to tts-normalized text.
 message NormalizeRequest {
-  // the input string to process
+  // The input string to process. This string can represent an html-epub element, make sure then to set
+  // parse_html = True. In the default case the normalizer pipeline expects raw text.
   string content = 1;
-  TextCleanerParams params = 2;
+  TextCleanerParams cleaner_params = 2;
   NormalizationDomain domain = 3;
   // if true, a spell corrector will be run over the normalized text. Default: False
   bool do_spellcorrect = 4;
-
+  // If true, sentence boundaries will be labelled, and also inserted into very long sentences, i.e.
+  // sentences that extend the maximum number of tokens. Default: False.
+  bool sentence_split = 5;
+  // If phrasing is set to True, the phrasing module will be invoked and extra pause tags inserted where applicable.
+  // Phrasing improves results of sentence_split if sentences need to be split up, this is best done on
+  // phrase boundaries. However, currently phrasing is a bit resource intensive and thus slows the pipeline down.
+  // Default: False.
+  bool phrasing = 6;
   // TagTokens represent tags like '<sil>'. Those might not be wanted in the content response,
   // if a phonetic transcription only is wanted set the following to True. Default is False.
   // The TagTokens will always be accessible in the token list response.
-  bool no_tag_tokens_in_content = 6;
+  bool no_tag_tokens_in_content = 7;
+  // Max tokens in chunk. If a sentence extends this number, a sentence boundary label will be inserted in a
+  // sensible position within the sentence if sentence_split == True. A sensible number of tokens is 30, make sure
+  // to set a value for max_characters_in_chunk if sentence_split == True!
+  // Default is 0.
+  int32 max_characters_in_chunk = 8;
+  // If the content should be parsed as html before cleaning, parse_html is True, default is False
+  bool parse_html = 9;
   // The language identification (ISO 639 code for the language name - ISO 3166 country code)
   // for specifying the synthesis language.
   // Default: is-IS
-  string language_code = 7;
+  string language_code = 10;
 }
 
+// The response message resulting from a normalizeRequest
 message NormalizedResponse {
   // the normalized input as a list of strings representing sentences or max TTS processing chunks of tokens
   repeated string processed_content = 1;
   // the processed input as a list of tokens, containing the processing history step by step
   repeated NormalizedTokenList tokens = 2;
+  // TODO: do we need this in the response? Already present in the request, values do not change
   NormalizationDomain domain = 3;
   bool is_spellcorrected = 4;
 }
 
-// Default parameters/settings for the processing modules: text cleaner, normalizer and transcriber (g2)
-message DefaultProcessingResponse {
-  TextCleanerParams text_cleaner_params = 1;
-  NormalizationDomain normalization_domain = 2;
-  PhonemeDescription phoneme_description = 3;
-}
-
+// A list of normalizedTokens and tagTokens, embedded in a normalizedResponse
 message NormalizedTokenList {
   oneof tokens {
     NormalizedToken normalized = 1;
@@ -112,9 +133,10 @@ message NormalizedTokenList {
   }
 }
 
-// Request text-cleaning from raw text to clean text.
+// Request text cleaning from raw text to clean text.
 message TextCleanRequest {
-  // the input string to process
+  // The input string to process. This string can represent an html-epub element, make sure then to set
+  // parse_html = True. In the default case the text cleaner expects raw text.
   string content = 1;
   // if text cleaner should deviate from default settings, set the corresponding parameters
   TextCleanerParams params = 2;
@@ -127,19 +149,28 @@ message TextCleanRequest {
   string language_code = 7;
 }
 
+// The response message resulting from a textCleanRequest
 message TextCleanResponse {
-  // the cleaned input string as string
+  // The cleaned input string as string. Note that the text cleaner does not return a list of strings (repeated),
+  // since the text cleaner does not perform sentence detection.
   string processed_content = 1;
-  // the cleaned input as a list of tokens, containing the original and the clean version of each token,
+  // The cleaned input as a list of tokens, containing the original and the clean version of each token,
   // plus tagTokens, if any were added.
   repeated CleanTokenList tokens = 2;
 }
 
+// A list of cleanTokens and tagTokens, embedded in a textCleanResponse
 message CleanTokenList {
   oneof tokens {
     CleanToken cleaned = 1;
     TagToken tag = 2;
   }
+}
+
+// Default parameters/settings for the processing modules: text cleaner, normalizer and transcriber (g2)
+message DefaultProcessingResponse {
+  NormalizeRequest normalization_params = 1;
+  PhonemeDescription phoneme_description = 2;
 }
 
 // The basic information on a non-processed token from an input text.
@@ -163,7 +194,7 @@ message Token {
   Always refer to the original Token.index when positioning tokens in the original text.
  */
 
-// Clean token. Should not contain any characters later processing steps cannot handle.
+// Clean token. Field 'name' should not contain any characters later processing steps cannot handle.
 message CleanToken {
   Token original_token = 1;
   // the cleaned version of the token
@@ -171,7 +202,7 @@ message CleanToken {
   int32 index = 3;
 }
 
-// Normalized token. Should not contain any digits or symbols not processable by a g2p module.
+// Normalized token. Field 'name' should not contain any digits or symbols not processable by a g2p module.
 // A normalized token might have been processed by a spell checker.
 message NormalizedToken {
   CleanToken clean_token = 1;
@@ -181,7 +212,7 @@ message NormalizedToken {
   NormalizationDomain domain = 4;
 }
 
-// Transcribed token. A phonetic representation of a normalizedToken.
+// Transcribed token. Field 'name' is a phonetic representation of a normalizedToken.
 message TranscribedToken {
   NormalizedToken normalized_token = 1;
   // the transcribed version of the token
@@ -275,6 +306,8 @@ message PhonemeDescription {
   string word_separator = 7;
 }
 
+// Domain for the normalizer. Currently a general domain and the sports domain are supported, the difference
+// being the handling of '-' between digits as in '5-7': general domain: 'fimm til sjö', sports domain: 'fimm <sil> sjö'.
 message NormalizationDomain {
   Domain norm_domain = 1;
 }
@@ -301,9 +334,10 @@ enum PhoneticAlphabet {
 // Default: PHONEME_PLAIN
 enum PhonemeFormat {
   PHONEME_INVALID = 0;
-  // Carnegie Mellon University phonetic dictionary format
-  PHONEME_CMU = 1;
-  PHONEME_PLAIN = 2;
+  PHONEME_PLAIN = 1;
+  // Carnegie Mellon University phonetic dictionary format; not yet implemented,
+  // suitable for dictionary transcriptions.
+  // PHONEME_CMU = 2;
 }
 
 // Dialect for the transcription.
@@ -320,8 +354,8 @@ enum G2PModel {
   MODEL_INVALID = 0;
   // slow, high quality
   MODEL_LSTM = 1;
-  // fast, medium quality
-  MODEL_THRAX = 2;
+  // fast, medium quality - not yet implemented
+  // MODEL_THRAX = 2;
 }
 
 // Possible ABI versions
