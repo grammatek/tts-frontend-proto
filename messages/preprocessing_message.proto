@@ -53,15 +53,15 @@ message PreprocessedResponse {
   repeated string processed_content = 1;
   // The processed input as a list of tokens, containing the processing history step by step. The token list
   // always contains the tag tokens, regardless of the settings in the request.
-  repeated TranscribedTokenList tokens = 2;
+  repeated TokenList tokens = 2;
   // TODO: do we need this here in the response?
   PhonemeDescription description = 3;
 }
 
-// A list of transcribedTokens and tagTokens, embedded in a preprocessedResponse
-message TranscribedTokenList {
+// A list of tokens and tagTokens, embedded in a preprocessedResponse
+message TokenList {
   oneof tokens {
-    TranscribedToken transcribed = 1;
+    Token token = 1;
     TagToken tag = 2;
   }
 }
@@ -119,18 +119,10 @@ message NormalizedResponse {
   // the normalized input as a list of strings representing sentences or max TTS processing chunks of tokens
   repeated string processed_content = 1;
   // the processed input as a list of tokens, containing the processing history step by step
-  repeated NormalizedTokenList tokens = 2;
+  repeated TokenList tokens = 2;
   // TODO: do we need this in the response? Already present in the request, values do not change
   NormalizationDomain domain = 3;
   bool is_spellcorrected = 4;
-}
-
-// A list of normalizedTokens and tagTokens, embedded in a normalizedResponse
-message NormalizedTokenList {
-  oneof tokens {
-    NormalizedToken normalized = 1;
-    TagToken tag = 2;
-  }
 }
 
 // Request text cleaning from raw text to clean text.
@@ -156,15 +148,7 @@ message TextCleanResponse {
   string processed_content = 1;
   // The cleaned input as a list of tokens, containing the original and the clean version of each token,
   // plus tagTokens, if any were added.
-  repeated CleanTokenList tokens = 2;
-}
-
-// A list of cleanTokens and tagTokens, embedded in a textCleanResponse
-message CleanTokenList {
-  oneof tokens {
-    CleanToken cleaned = 1;
-    TagToken tag = 2;
-  }
+  repeated TokenList tokens = 2;
 }
 
 // Default parameters/settings for the processing modules: text cleaner, normalizer and transcriber (g2)
@@ -173,52 +157,44 @@ message DefaultProcessingResponse {
   PhonemeDescription phoneme_description = 2;
 }
 
-// The basic information on a non-processed token from an input text.
+// The information on a processed token from an input text.
 message Token {
   // the token string
   string name = 1;
+  // cleaned token string
+  string clean = 2;
+  // token tokenized by the tts-tokenizer which might have splitted up the original token
+  repeated string tokenized = 3;
+  // normalized version of the token string
+  repeated NormalizedToken normalized = 4;
+  // transcribed version of the token string
+  repeated TranscribedToken transcribed = 5;
   // index of the token in the original text
-  int32 index = 2;
+  int32 index = 6;
   // char index in original text
-  int32 span_from = 3;
+  int32 span_from = 7;
   // last char index, excluding, in original text
-  int32 span_to = 4;
-}
-
-/*
-  Processed tokens. We add an index field to each processing step, since an original token can result in more
-  than one processed tokens.
-  Note: the parameter 'index' in the processed tokens is mainly for ordering during processing steps and might
-  not be unique, i.e. two or more processed tokens can have the same index if they were generated from one
-  original token, or the original index might have incremented because of inserted tagTokens.
-  Always refer to the original Token.index when positioning tokens in the original text.
- */
-
-// Clean token. Field 'name' should not contain any characters later processing steps cannot handle.
-message CleanToken {
-  Token original_token = 1;
-  // the cleaned version of the token
-  string name = 2;
-  int32 index = 3;
+  int32 span_to = 8;
 }
 
 // Normalized token. Field 'name' should not contain any digits or symbols not processable by a g2p module.
 // A normalized token might have been processed by a spell checker.
 message NormalizedToken {
-  CleanToken clean_token = 1;
   // the normalized version of the token
-  string name = 2;
-  int32 index = 3;
+  string normalized_string = 1;
+  // the part-of-speech tag for the normalized token
+  string pos = 2;
+  // if the normalized token has been spell corrected, is_spellcorrected is True, default is False
+  bool is_spellcorrected = 3;
+  // the domain used to normalize, default is "other"
   NormalizationDomain domain = 4;
 }
 
 // Transcribed token. Field 'name' is a phonetic representation of a normalizedToken.
 message TranscribedToken {
-  NormalizedToken normalized_token = 1;
   // the transcribed version of the token
-  string name = 2;
-  int32 index = 3;
-  PhonemeDescription description = 4;
+  string name = 1;
+  PhonemeDescription description = 2;
 }
 
 // Tag token. Representing an SSML or another kind of xml-tag.
